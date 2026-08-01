@@ -3,10 +3,10 @@
     {
       "name": "microtherion",
       "maintainer": "Matthias Neeracher",
-      "websiteURL": "https://github.com/microtherion/ScratchMonkey",
+      "websiteURL": "https://github.com/faisalnipi/UnbrickAVR",
       "email": "microtherion@gmail.com",
       "help": {
-        "online": "https://microtherion.github.io/ScratchMonkey"
+        "online": "https://github.com/faisalnipi/UnbrickAVR"
       },
       "platforms": [
         {
@@ -19,7 +19,7 @@
           "checksum": "",
           "size": "",
           "help": {
-            "online": "https://microtherion.github.io/ScratchMonkey"
+            "online": "https://github.com/faisalnipi/UnbrickAVR"
           },
           "boards": [],
           "toolsDependencies": []
