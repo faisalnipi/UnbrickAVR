@@ -1,10 +1,10 @@
 {
   "packages": [
     {
-      "name": "microtherion",
-      "maintainer": "Matthias Neeracher",
+      "name": "UnbrickAVR",
+      "maintainer": "Tawhidur Rahman Faisal",
       "websiteURL": "https://github.com/faisalnipi/UnbrickAVR",
-      "email": "microtherion@gmail.com",
+      "email": "faisalnipi@gmail.com@gmail.com",
       "help": {
         "online": "https://github.com/faisalnipi/UnbrickAVR"
       },
