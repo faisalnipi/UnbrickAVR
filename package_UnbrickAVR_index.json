@@ -12,7 +12,7 @@
         {
           "name": "UnbrickAVR",
           "architecture": "avr",
-          "version": "2.0.1",
+          "version": "v0.0.1",
           "category": "Contributed",
           "url": "https://github.com/faisalnipi/UnbrickAVR/archive/refs/tags/v0.0.1.tar.gz",
           "archiveFileName": "v0.0.1.tar.gz",
