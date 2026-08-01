@@ -1,0 +1,45 @@
+#!/usr/bin/ruby
+
+NAME = {
+  'uno' => 'Arduino Uno',
+  'micro'   => 'Arduino Leonardo / Micro',
+  'nano' => 'Arduino Nano',
+  'mega' => 'Arduino Mega',
+  'digispark'=> 'Digispark',
+  'icsp'    => 'ICSP Header'
+}
+TARGET = {
+  'none' => []
+}
+
+SEEN = {}
+ARGV.each do |arg|
+  if !(arg =~ /_prog_/) && arg =~ %r|/([a-z0-9]+)_([a-z]+)\.|
+    next if SEEN[$1+"_"+$2]
+    SEEN[$1+"_"+$2] = true
+    TARGET[$2] ||= []
+    TARGET[$2] << $1
+  end
+end
+
+echo = true
+$stdin.each_line do |line|
+  if line =~ /\}/
+    echo = true
+  end
+  print line if echo
+  if line =~ /var\s+gTarget/
+    ['none', 'isp', 'hvsp', 'hvpp', 'tpi'].each do |proto|
+      puts "  \"#{proto}\": ["
+      TARGET[proto].each do |t|
+        n = t.sub(/^at/, 'AT')
+        if NAME[n]
+          n = NAME[n]
+        end
+        puts "    [\"#{n}\", \"#{t}\"],"
+      end
+      puts "  ],"
+    end
+    echo = false
+  end
+end

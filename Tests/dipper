@@ -1,0 +1,286 @@
+#!/usr/bin/ruby
+# coding: utf-8
+#
+
+require 'getoptlong'
+
+#
+# Parse input
+#
+DPI             = 300
+$PACKWIDTH      = 0.300*DPI
+$PINWIDTH       = 0.050*DPI
+$PACKEXCESS     = 0.035*DPI
+$PINPITCH       = 0.100*DPI
+$PINHEIGHT      = 0.050*DPI
+$CIRCRADIUS     = 0.035*DPI
+$LABELWIDTH     = 70
+$FUNCTIONWIDTH  = 99
+$TITLE          = nil
+$BOARD          = nil
+$BOARDWIDTH     = 0
+$BOARDHEIGHT    = 0
+$BOARDROTATION  = 0
+
+PIN   = Array.new
+LABEL = Hash.new {|hash,key| hash[key] = [0, key, '', nil]}
+COLOR = Hash.new {|hash,key| hash[key] = ['white', 'black', nil]}
+pinNo = 0
+ARGF.each_line do |line|
+  pinNo   += 1
+  label    = nil
+  function = nil
+  callout  = nil
+  line.gsub!(/#\s+.*/, '')
+  next if line =~ /^\s*$/
+  if line =~ /^\s*%title\s+(.*\S)/
+    $TITLE = $1
+    next
+  end
+  if line =~ /^\s*%image\s+(.*\S)\s+(\S+)\s+(\S+)\s+(\S+)/
+    $BOARD         = $1
+    $BOARDWIDTH    = $2
+    $BOARDHEIGHT   = $3
+    $BOARDROTATION = $4
+    if $BOARDROTATION=="0"
+      $PACKWIDTH   = $BOARDWIDTH.to_f
+      $PACKHEIGHT  = $BOARDHEIGHT.to_f
+    elsif $BOARDROTATION =~ /90/
+      $PACKHEIGHT   = $BOARDWIDTH.to_f
+      $PACKWIDTH  = $BOARDHEIGHT.to_f
+    end
+    $FUNCTIONWIDTH = 69
+    $LABELWIDTH    = 0
+    $PINWIDTH      = 0
+    $PINPITCH      = 14.4
+    next
+  end
+  if line =~ /^\s*%color\s+(.*?\S)\s+(\S+)\s+(\S+)(.*)/
+    func = $1
+    COLOR[func] = [$2, $3, nil]
+    subst = $4
+    if subst =~ /^\s*"(.*)"/
+      COLOR[func][2] = $1
+    end
+    next
+  end
+  if line =~ /(.*)=\s*(.*\S)\s*/
+    line     = $1
+    function = $2
+  end
+  if line =~ /^(.*)->\s*(\S+)\s+(\S+)/
+    callout  = [$2.to_f, $3.to_f]
+    line     = $1
+  end
+  if line =~ /^\s*(-?\d+)\s+(.*\S)/
+    pinNo    = $1.to_i
+    label    = $2
+  elsif line =~ /^\s*(-?\d+\.\d*)\s+(.*\S)/
+    pinNo    = $1.to_f
+    label    = $2
+  elsif line =~ /^\s*(-?\d+\.\d*)/
+    pinNo    = $1.to_f
+  elsif line =~ /^\s*(-?\d+)/
+    pinNo    = $1.to_i
+  elsif line =~ /^\s*(.*\S)/
+    label    = $1
+  end
+  pin = nil
+  if !label.nil?
+    pin = LABEL[label]
+    if pin[0] != 0
+      pinNo = pin[0]
+    else
+      pin[0] = pinNo
+    end
+    if $BOARD
+      PIN << pin unless PIN.include?(pin)
+    else
+      while pinNo-1 > PIN.size
+        PIN << [PIN.size+1, 'NC', '']
+      end
+      if pinNo > PIN.size
+        PIN << pin
+      end
+    end
+  elsif !$BOARD
+    while pinNo > PIN.size
+      PIN << [PIN.size+1, 'NC', '', nil]
+    end
+    pin = PIN.last
+  end
+  pin[2] = function unless function.nil?
+  pin[3] = callout unless callout.nil?
+end
+if (PIN.size % 2)==1
+  PIN << [PIN.size+1, 'NC', '']
+end
+
+#
+# Generate SVG
+#
+ROWS       = PIN.size / 2
+LABELPAD   = 5
+PACKLEFT   = $FUNCTIONWIDTH+$LABELWIDTH+$PINWIDTH+LABELPAD
+FUNHALF    = $FUNCTIONWIDTH / 2
+PACKRIGHT  = PACKLEFT+$PACKWIDTH-2.0*$PINWIDTH
+PACKTOP    = 5
+PACKHEIGHT = $BOARD ? $PACKHEIGHT.to_f : (ROWS-1)*$PINPITCH+2.0*$PACKEXCESS+$PINHEIGHT
+TOTALWIDTH = 2*($FUNCTIONWIDTH+$LABELWIDTH+LABELPAD)+$PACKWIDTH
+TOTALHEIGHT= 2*PACKTOP+PACKHEIGHT
+PINNOPAD   = 3
+PINNOBASE  = -4
+LABELBASE  = -1.5
+FUNBASE    = 0
+FUNBOXTOP  = $BOARD ? -2 : 5
+FUNBOXHEIGHT  = $BOARD ? 13 : $PINHEIGHT+FUNBOXTOP+5
+FUNBOXROUND   = 3
+
+$PINDESC = ''
+PIN.each do |pin|
+  row  = pin[0]-1
+  left = true
+  if $BOARD
+    if row < -0.99
+      row  = -2.0-row
+      left = false
+    end
+  elsif row >= ROWS
+    row = PIN.size-row-1
+    left= false
+  end
+  top  = PACKTOP+$PACKEXCESS+row*$PINPITCH
+  base = top+$PINHEIGHT
+  if left
+    $PINDESC += <<END_PIN unless $BOARD
+  <rect class="pin" x="#{PACKLEFT-$PINWIDTH}" y="#{top}" width="#{$PINWIDTH}" height="#{$PINHEIGHT}"/>
+  <text class="label" x="#{PACKLEFT-$PINWIDTH-LABELPAD}" y="#{base+LABELBASE}" text-anchor="end">
+    #{pin[1]}
+  </text>
+  <text class="pinno" x="#{PACKLEFT+PINNOPAD}" y="#{base+PINNOBASE}">
+    #{pin[0]}
+  </text>
+END_PIN
+    if pin[2] != ''
+      name = COLOR[pin[2]][2] || pin[2]
+      $PINDESC += <<END_FUNCTION
+  <rect class="funbox" x="1" y="#{top-FUNBOXTOP}"
+        width="#{$FUNCTIONWIDTH}" height="#{FUNBOXHEIGHT}" rx="#{FUNBOXROUND}"
+        style="fill:#{COLOR[pin[2]][0]}"/>
+  <text class="function" x="#{FUNHALF}" y="#{base+LABELBASE}"
+        style="fill:#{COLOR[pin[2]][1]}">
+    #{name}
+  </text>
+END_FUNCTION
+      if pin[3]
+        startx = $FUNCTIONWIDTH+1
+        starty = top-FUNBOXTOP+0.5*FUNBOXHEIGHT
+        endx   = PACKLEFT+pin[3][0]*$PINPITCH
+        endy   = PACKTOP+$PACKEXCESS+(pin[3][1]-0.5)*$PINPITCH
+        bendx  = endx-(endy-starty).abs
+        $PINDESC += <<END_CALLOUT
+  <polyline class="calloutb"
+            points="#{startx},#{starty} #{bendx},#{starty} #{endx},#{endy}"/>
+  <polyline class="callout"
+            points="#{startx},#{starty} #{bendx},#{starty} #{endx},#{endy}"
+            style="stroke:#{COLOR[pin[2]][0]}"/>
+END_CALLOUT
+      end
+    end
+  else
+    $PINDESC += <<END_PIN unless $BOARD
+  <rect class="pin" x="#{PACKRIGHT}" y="#{top}" width="#{$PINWIDTH}" height="#{$PINHEIGHT}"/>
+  <text class="pinno" x="#{PACKRIGHT-PINNOPAD}" y="#{base+PINNOBASE}" text-anchor="end">
+    #{pin[0]}
+  </text>
+  <text class="label" x="#{PACKRIGHT+$PINWIDTH+LABELPAD}" y="#{base+LABELBASE}">
+    #{pin[1]}
+  </text>
+END_PIN
+    if pin[2] != ''
+      name = COLOR[pin[2]][2] || pin[2]
+      $PINDESC += <<END_FUNCTION
+  <rect class="funbox" x="#{PACKRIGHT+$PINWIDTH+$LABELWIDTH+LABELPAD-1}" y="#{top-FUNBOXTOP}"
+        width="#{$FUNCTIONWIDTH}" height="#{FUNBOXHEIGHT}" rx="#{FUNBOXROUND}"
+        style="fill:#{COLOR[pin[2]][0]}"/>
+  <text class="function" x="#{PACKRIGHT+$PINWIDTH+$LABELWIDTH+LABELPAD+FUNHALF}" y="#{base+LABELBASE}"
+        style="fill:#{COLOR[pin[2]][1]}">
+    #{name}
+  </text>
+END_FUNCTION
+    end
+  end
+end
+
+if $TITLE.nil?
+  $TITLE = ''
+else
+  $TITLE = <<END_TITLE
+  <text class="title" x="#{PACKLEFT+0.5*$PACKWIDTH-$PINWIDTH}" y="#{PACKTOP+0.5*PACKHEIGHT}">
+    #{$TITLE}
+  </text>
+END_TITLE
+end
+
+if $BOARD
+  $FONTS = <<END_BOARD_FONTS
+     .function { font-family:"Courier"; font-size:13px; text-anchor:middle }
+END_BOARD_FONTS
+else
+  $FONTS = <<END_IC_FONTS
+     .pinno    { font-family:"Courier"; font-size:12px }
+     .label    { font-family:"Helvetica"; font-size:18px }
+     .function { font-family:"Courier"; font-size:18px; text-anchor:middle }
+     .title    { font-family:"Helvetica-Bold"; font-size:20px; text-anchor:middle; writing-mode:tb; alignment-baseline:central }
+END_IC_FONTS
+end
+
+print <<END_SVG_HEADER
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     viewBox="0 0 #{TOTALWIDTH} #{TOTALHEIGHT}">
+  <defs>
+  <style type="text/css"><![CDATA[
+     .ic       { fill:#909090; stroke:#000000; stroke-width:2.0 }
+     .notch    { fill:#a0a0a0; stroke:#000000; stroke-width:1.0 }
+     .pin      { fill:#d0d0d0; stroke:#000000; stroke-width:1.0 }
+     .callout  { fill:none; stroke-width:3.0; stroke-linecap:round }
+     .calloutb { stroke:white; fill:none;
+                 stroke-width:5.0; stroke:opacity:75%; stroke-linecap:round }
+#{$FONTS}     .funbox   { stroke:black }
+     ]]>
+  </style>
+  </defs>
+END_SVG_HEADER
+
+if $BOARD
+  boardx = $FUNCTIONWIDTH+LABELPAD
+  boardy = PACKTOP
+  trans  = ""
+  if $BOARDROTATION=="90"
+    boardy -= $BOARDHEIGHT.to_f
+    trans   = <<END_ROT_90
+    transform="rotate(90, #{boardx}, #{PACKTOP})"
+END_ROT_90
+  elsif $BOARDROTATION=="-90"
+    trans   = <<END_ROT_MINUS_90
+        transform="rotate(-90, #{boardx}, #{PACKTOP})"
+END_ROT_MINUS_90
+    boardx -= $BOARDWIDTH.to_f
+  end
+  print <<END_SVG_BOARD
+  <image xlink:href="#{$BOARD}"
+      x="#{boardx}" y="#{boardy}" width="#{$BOARDWIDTH}" height="#{$BOARDHEIGHT}" #{trans}/>
+END_SVG_BOARD
+else
+  print <<END_SVG_IC
+  <rect class="ic" x="#{PACKLEFT}" y="#{PACKTOP}" width="#{PACKRIGHT-PACKLEFT}" height="#{PACKHEIGHT}"/>
+  <path class="notch" d="M#{PACKLEFT+$PACKWIDTH*0.5-$PINWIDTH-$CIRCRADIUS},#{PACKTOP} a#{$CIRCRADIUS},#{$CIRCRADIUS} 0 0,0 #{2*$CIRCRADIUS},0"/>
+END_SVG_IC
+end
+
+print <<END_SVG_BODY
+  #{$TITLE}
+  #{$PINDESC}
+</svg>
+END_SVG_BODY
