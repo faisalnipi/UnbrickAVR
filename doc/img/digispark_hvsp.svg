@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     viewBox="0 0 298.1 117.35">
+  <defs>
+  <style type="text/css"><![CDATA[
+     .ic       { fill:#909090; stroke:#000000; stroke-width:2.0 }
+     .notch    { fill:#a0a0a0; stroke:#000000; stroke-width:1.0 }
+     .pin      { fill:#d0d0d0; stroke:#000000; stroke-width:1.0 }
+     .callout  { fill:none; stroke-width:3.0; stroke-linecap:round }
+     .calloutb { stroke:white; fill:none;
+                 stroke-width:5.0; stroke:opacity:75%; stroke-linecap:round }
+     .function { font-family:"Courier"; font-size:13px; text-anchor:middle }
+     .funbox   { stroke:black }
+     ]]>
+  </style>
+  </defs>
+  <image xlink:href="digispark.svg"
+      x="74" y="5" width="150.1" height="107.35" />
+  
+    <rect class="funbox" x="1" y="39.1"
+        width="69" height="13" rx="3"
+        style="fill:black"/>
+  <text class="function" x="34" y="50.6"
+        style="fill:white">
+    GND
+  </text>
+  <polyline class="calloutb"
+            points="70,45.6 99.77999999999997,45.6 156.07999999999998,101.9"/>
+  <polyline class="callout"
+            points="70,45.6 99.77999999999997,45.6 156.07999999999998,101.9"
+            style="stroke:black"/>
+  <rect class="funbox" x="1" y="95.26"
+        width="69" height="13" rx="3"
+        style="fill:red"/>
+  <text class="function" x="34" y="106.76"
+        style="fill:white">
+    VCC
+  </text>
+  <polyline class="calloutb"
+            points="70,101.76 141.54000000000002,101.76 141.68,101.9"/>
+  <polyline class="callout"
+            points="70,101.76 141.54000000000002,101.76 141.68,101.9"
+            style="stroke:red"/>
+  <rect class="funbox" x="228.1" y="82.3"
+        width="69" height="13" rx="3"
+        style="fill:blue"/>
+  <text class="function" x="263.1" y="93.8"
+        style="fill:white">
+    SDI
+  </text>
+  <rect class="funbox" x="228.1" y="67.9"
+        width="69" height="13" rx="3"
+        style="fill:orchid"/>
+  <text class="function" x="263.1" y="79.4"
+        style="fill:black">
+    SII
+  </text>
+  <rect class="funbox" x="228.1" y="53.5"
+        width="69" height="13" rx="3"
+        style="fill:white"/>
+  <text class="function" x="263.1" y="65.0"
+        style="fill:black">
+    SDO
+  </text>
+  <rect class="funbox" x="228.1" y="39.1"
+        width="69" height="13" rx="3"
+        style="fill:gold"/>
+  <text class="function" x="263.1" y="50.6"
+        style="fill:black">
+    SCI
+  </text>
+  <rect class="funbox" x="228.1" y="10.3"
+        width="69" height="13" rx="3"
+        style="fill:green"/>
+  <text class="function" x="263.1" y="21.8"
+        style="fill:white">
+    RESET
+  </text>
+
+</svg>
