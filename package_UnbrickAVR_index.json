@@ -14,8 +14,8 @@
           "architecture": "avr",
           "version": "2.0.1",
           "category": "Contributed",
-          "url": "https://github.com/faisalnipi/UnbrickAVR/archive/refs/tags/v0.0.1.tar.gz",
-          "archiveFileName": "v0.0.1.tar.gz",
+          "url": "https://github.com/faisalnipi/UnbrickAVR/blob/f340b6d28af5824914c3a46373f69221aa1ada58/UnbrickAVR-2.0.1.zip",
+          "archiveFileName": "UnbrickAVR-2.0.1.zip",
           "checksum": "",
           "size": "",
           "help": {
