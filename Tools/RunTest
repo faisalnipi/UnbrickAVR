@@ -1,0 +1,30 @@
+#!/usr/bin/ruby
+
+TINY_MODE = (ARGV.length == 5)
+if !TINY_MODE
+  (PART,PROG,FLASH,EEPROM,ofuse,nfuse) = ARGV
+  OFUSE = ofuse.split(':')
+  NFUSE = nfuse.split(':')
+else
+  (PART,PROG,FLASH,OFUSE,NFUSE) = ARGV
+end
+
+AVRDUDE     = ENV['AVRDUDE'] || '/usr/local/CrossPack-AVR/bin/avrdude'
+AVRDUDECONF = ENV['AVRDUDECONF'] ? "-C '#{ENV['AVRDUDECONF']}'" : ''
+SERIALPORT  = ENV['SERIALPORT'] || %x{ls /dev/cu.usbmodem*}.chomp
+
+def loud_system(command)
+  $stderr.puts command
+  system command or raise
+end
+
+
+DUDE  = "'#{AVRDUDE}' #{AVRDUDECONF} -p #{PART} -c #{PROG} -P #{SERIALPORT}"
+
+if !TINY_MODE
+  loud_system "#{DUDE} -U flash:w:#{FLASH}:i -U eeprom:w:#{EEPROM}:i -U lfuse:w:0x#{NFUSE[0]}:m -U hfuse:w:0x#{NFUSE[1]}:m -U efuse:w:0x#{NFUSE[2]}:m"
+  loud_system "#{DUDE} -U lfuse:w:0x#{OFUSE[0]}:m -U hfuse:w:0x#{OFUSE[1]}:m -U efuse:w:0x#{OFUSE[2]}:m"
+else
+  loud_system "#{DUDE} -U flash:w:#{FLASH}:i -U fuse:w:0x#{NFUSE}:m"
+  loud_system "#{DUDE} -U fuse:w:0x#{OFUSE}:m"
+end
