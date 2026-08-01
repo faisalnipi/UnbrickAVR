@@ -10,7 +10,7 @@
       },
       "platforms": [
         {
-          "name": "ScratchMonkey",
+          "name": "UnbrickAVR",
           "architecture": "avr",
           "version": "2.0.1",
           "category": "Contributed",
